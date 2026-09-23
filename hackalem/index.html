@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Локальный учебный сервис подбора event-подрядчиков.">
+    <title>HackAlem — подбор подрядчиков</title>
+    <link rel="stylesheet" href="/static/style.css?v=ai1">
+    <script src="/static/script.js?v=ai1" defer></script>
+</head>
+<body>
+    <header class="header wrap">
+        <a href="/" class="logo" aria-label="HackAlem, главная"><span class="logo-icon" aria-hidden="true">H</span>HackAlem<span class="logo-dot">.</span></a>
+        <span class="version">Локальный прототип · CSV-каталог</span>
+    </header>
+
+    <main class="wrap">
+        <section class="intro" aria-labelledby="page-title">
+            <span class="eyebrow">Мероприятие начинается с команды</span>
+            <h1 id="page-title">Не весь каталог.<br><span>Только подходящие.</span></h1>
+            <p class="lead">Задайте условия мероприятия — получите до трёх подрядчиков с объяснением, почему они подходят.</p>
+            <p class="demo-notice"><span class="notice-dot" aria-hidden="true"></span><strong>Анонимизированный каталог.</strong> Имена заменены; синтетические профили и дополненные поля отмечены отдельно. Календарь не подтверждает бронирование.</p>
+        </section>
+
+        <noscript><p class="noscript">Для работы формы включите JavaScript в браузере.</p></noscript>
+
+        <div class="workspace">
+            <section class="panel form-panel" aria-labelledby="form-title">
+                <div class="panel-heading"><span class="step-tag">01</span><div><h2 id="form-title">Условия мероприятия</h2><p>Поля со звёздочкой обязательны.</p></div></div>
+                <form id="recommend-form">
+                    <fieldset id="form-fields" disabled>
+                        <legend class="sr-only">Параметры подбора</legend>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="city">Город <span aria-hidden="true">*</span></label>
+                                <select id="city" name="city" required><option value="">Загрузка…</option></select>
+                            </div>
+                            <div class="field">
+                                <label for="event-date">Дата <span aria-hidden="true">*</span></label>
+                                <input id="event-date" name="event_date" type="date" required aria-describedby="date-hint">
+                            </div>
+                            <div class="field full">
+                                <p id="date-hint" class="hint">Загружаем доступный период календаря…</p>
+                            </div>
+                            <div class="field full">
+                                <label for="event-type">Тип мероприятия <span aria-hidden="true">*</span></label>
+                                <select id="event-type" name="event_type" required><option value="">Загрузка…</option></select>
+                            </div>
+                            <div class="field full">
+                                <label for="category">Кого ищем <span aria-hidden="true">*</span></label>
+                                <select id="category" name="category" required><option value="">Загрузка…</option></select>
+                            </div>
+                            <div class="field full">
+                                <label for="budget">Бюджет, ₸ <span aria-hidden="true">*</span></label>
+                                <input id="budget" name="budget" type="number" min="0" max="9007199254740991" step="1" required inputmode="numeric" value="500000" aria-describedby="budget-hint">
+                                <p class="hint" id="budget-hint">Сравниваем с ценой «от». Итоговая стоимость может быть выше.</p>
+                            </div>
+                            <div class="field">
+                                <label for="duration">Длительность, ч</label>
+                                <input id="duration" name="duration" type="number" min="0.1" step="any" inputmode="decimal" placeholder="Не важно" value="4">
+                            </div>
+                            <div class="field">
+                                <label for="language">Язык</label>
+                                <select id="language" name="language"><option value="">Не важно</option></select>
+                            </div>
+                            <div class="field full">
+                                <label for="preferences">Пожелания к стилю</label>
+                                <textarea id="preferences" name="preferences" maxlength="500" rows="3" placeholder="Например: живые эмоции, ненавязчивая съёмка" aria-describedby="preferences-hint"></textarea>
+                                <p class="hint" id="preferences-hint">Необязательно, до 500 символов. Дату, бюджет и язык указывайте в отдельных полях. AI сравнивает описания, а не гарантирует выполнение пожеланий.</p>
+                            </div>
+                        </div>
+                        <button class="primary-button" type="submit" id="submit-button"><span class="button-spinner" aria-hidden="true"></span><span id="submit-label">Подобрать подрядчиков</span><span class="button-arrow" aria-hidden="true">→</span></button>
+                    </fieldset>
+                </form>
+                <p id="catalog-status" class="catalog-status" role="status">Подключаем CSV-каталог…</p>
+                <p id="ai-status" class="catalog-status" role="status">Проверяем локальную AI-модель…</p>
+                <button type="button" id="retry-button" class="retry-button" hidden>Повторить загрузку каталога</button>
+            </section>
+
+            <section class="results-panel" aria-labelledby="results-title" aria-busy="false" id="results-section">
+                <div class="results-heading"><div><span class="eyebrow">Без лишних вариантов</span><h2 id="results-title">Ваша подборка</h2></div><span id="result-counter" class="count-badge" hidden></span></div>
+                <p id="query-summary" class="query-summary" hidden></p>
+                <p id="changed-notice" class="changed-notice" hidden>Условия изменены. Нажмите «Подобрать подрядчиков», чтобы обновить результат.</p>
+                <div id="result-status" class="status-box neutral" role="status" aria-live="polite" aria-atomic="true">
+                    <h3 id="status-title">Здесь появится подборка</h3>
+                    <p id="status-message">Заполните форму слева или запустите один из примеров ниже.</p>
+                </div>
+                <div id="cards" class="cards"></div>
+                <p id="algorithm-note" class="algorithm-note" hidden>Режим сортировки будет указан после подбора.</p>
+            </section>
+        </div>
+
+        <section class="examples" aria-labelledby="examples-title">
+            <div><h2 id="examples-title">Проверьте разные сценарии</h2><p>Кнопка заполняет форму и сразу отправляет запрос.</p></div>
+            <div class="example-buttons">
+                <button type="button" data-example="emotions" disabled>AI: живые кадры</button>
+                <button type="button" data-example="concerts" disabled>AI: сцена и концерты</button>
+                <button type="button" data-example="success" disabled>Три результата</button>
+                <button type="button" data-example="busy" disabled>Другая дата</button>
+                <button type="button" data-example="rare" disabled>Редкая категория</button>
+                <button type="button" data-example="budget" disabled>Маленький бюджет</button>
+                <button type="button" data-example="absent" disabled>Нет категории в городе</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="wrap footer"><span>HackAlem · учебный прототип</span><span>Только рекомендации. Без бронирования и оплаты.</span><a href="/docs">Проверить API ↗</a></footer>
+</body>
+</html>
